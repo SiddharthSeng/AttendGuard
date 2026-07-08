@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+
+# Local SQLite database — contains personal attendance data, NEVER commit this
+*.db
+*.db-shm
+*.db-wal
+
+# Electron builder cache & release output
+release/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+.eslintcache
+
+# Test coverage
+coverage/

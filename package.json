@@ -1,0 +1,115 @@
+{
+  "name": "attendguard",
+  "version": "1.0.0",
+  "description": "Desktop attendance tracker that projects end-of-semester % and tells you how many classes you can safely skip — Electron + React + TypeScript + SQLite",
+  "main": "./out/main/index.js",
+  "author": {
+    "name": "SiddharthSeng",
+    "url": "https://github.com/SiddharthSeng"
+  },
+  "homepage": "https://github.com/SiddharthSeng/AttendGuard",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint --cache .",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "electron-builder install-app-deps && electron-rebuild -f -w better-sqlite3",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "dist": "npm run build && electron-builder --win --mac --linux"
+  },
+  "build": {
+    "appId": "com.siddharth.attendguard",
+    "productName": "AttendGuard",
+    "copyright": "Copyright © 2025 SiddharthSeng",
+    "directories": {
+      "output": "release/${version}"
+    },
+    "files": [
+      "out/**/*",
+      "!out/**/*.map"
+    ],
+    "extraResources": [],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "icon": "resources/icon.png",
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "SiddharthSeng",
+      "repo": "AttendGuard"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ]
+  },
+  "dependencies": {
+    "@e965/xlsx": "^0.20.3",
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "better-sqlite3": "^12.11.1",
+    "date-fns": "^3.6.0",
+    "papaparse": "^5.5.3",
+    "react-router-dom": "^7.6.3",
+    "recharts": "^3.9.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@electron-toolkit/eslint-config-ts": "^3.1.0",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@electron/rebuild": "^3.7.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.19.1",
+    "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "electron": "^39.8.10",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^5.0.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "prettier": "^3.7.4",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "vitest": "^3.2.4"
+  }
+}

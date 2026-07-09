@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function SettingsPage({ semester, allSemesters, onSemesterChange, switchSemester }: Props) {
-  const [tab, setTab] = useState<'semester'|'semesters'|'notifications'>('semester')
+  const [tab, setTab] = useState<'semester'|'semesters'|'notifications'|'backup'>('semester')
 
   return (
     <>
@@ -34,6 +34,7 @@ export default function SettingsPage({ semester, allSemesters, onSemesterChange,
         <button className={`tab${tab==='semester'?' active':''}`} onClick={() => setTab('semester')}>Current Semester</button>
         <button className={`tab${tab==='semesters'?' active':''}`} onClick={() => setTab('semesters')}>All Semesters</button>
         <button className={`tab${tab==='notifications'?' active':''}`} onClick={() => setTab('notifications')}>Notifications</button>
+        <button className={`tab${tab==='backup'?' active':''}`} onClick={() => setTab('backup')}>Backup</button>
       </div>
 
       {tab === 'semester' && semester && (
@@ -53,6 +54,10 @@ export default function SettingsPage({ semester, allSemesters, onSemesterChange,
 
       {tab === 'notifications' && (
         <NotificationsTab />
+      )}
+
+      {tab === 'backup' && (
+        <BackupTab />
       )}
     </>
   )
@@ -241,6 +246,158 @@ function NotificationsTab() {
           For reminders when the app is closed, keep it running in the background via the system tray (coming in a future update).
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Backup Tab ───────────────────────────────────────────────────────────────
+
+function BackupTab() {
+  const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+
+  function flashMsg(text: string, ok: boolean) {
+    setMsg({ text, ok })
+    setTimeout(() => setMsg(null), 5000)
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const base64 = await window.attendGuard.exportBackup()
+      const bytes  = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+      const blob   = new Blob([bytes], { type: 'application/octet-stream' })
+      const url    = URL.createObjectURL(blob)
+      const a      = document.createElement('a')
+      const ts     = new Date().toISOString().slice(0, 10)
+      a.href = url
+      a.download = `attendguard-backup-${ts}.db`
+      a.click()
+      URL.revokeObjectURL(url)
+      flashMsg('✓ Backup downloaded successfully.', true)
+    } catch (err) {
+      flashMsg(`Export failed: ${String(err)}`, false)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // ── Import — shared logic for file picker and drop ────────────────────────
+  const handleFile = async (file: File) => {
+    if (!file.name.endsWith('.db') && !file.name.endsWith('.sqlite')) {
+      flashMsg('Please select a .db or .sqlite backup file.', false)
+      return
+    }
+    const ok = confirm(
+      `Restore backup from "${file.name}"?\n\nThis will REPLACE all current data (semesters, courses, attendance) with the backup. The app will restart.\n\nThis cannot be undone.`
+    )
+    if (!ok) return
+
+    setImporting(true)
+    try {
+      const buf    = await file.arrayBuffer()
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
+      await window.attendGuard.importBackup(base64)
+      flashMsg('✓ Backup restored — restarting…', true)
+    } catch (err) {
+      flashMsg(`Restore failed: ${String(err)}`, false)
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFile(file)
+    e.target.value = ''
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFile(file)
+  }
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 580 }}>
+      <div className="settings-section">
+        <div className="settings-section-title">Backup & Restore</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+          AttendGuard stores all data locally. Use these controls to protect against data loss
+          or migrate to another device.
+        </div>
+      </div>
+
+      <div className="backup-section">
+        {/* Export */}
+        <div className="backup-action-row">
+          <div className="backup-action-icon">💾</div>
+          <div className="backup-action-body">
+            <div className="backup-action-title">Export Database Backup</div>
+            <div className="backup-action-desc">
+              Downloads a complete copy of your attendance database as a <code>.db</code> file.
+              Keep it somewhere safe — this is your only recovery option.
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? '⏳ Exporting…' : '⬇ Download Backup'}
+            </button>
+          </div>
+        </div>
+
+        {/* Import */}
+        <div className="backup-action-row">
+          <div className="backup-action-icon">📂</div>
+          <div className="backup-action-body">
+            <div className="backup-action-title">Restore from Backup</div>
+            <div className="backup-action-desc">
+              Select or drop a <code>.db</code> backup file. <strong>This replaces all current data</strong> and restarts the app.
+            </div>
+
+            <label
+              className={`restore-drop-zone${dragOver ? ' drag-over' : ''}`}
+              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                accept=".db,.sqlite"
+                style={{ display: 'none' }}
+                onChange={handleInputChange}
+                disabled={importing}
+              />
+              {importing
+                ? '⏳ Restoring…'
+                : dragOver
+                  ? '📂 Drop to restore'
+                  : '📂 Drop backup file here, or click to browse'}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Status message */}
+      {msg && (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: 500,
+          background: msg.ok ? 'var(--green-bg)' : 'var(--red-bg)',
+          color:      msg.ok ? 'var(--green)'    : 'var(--red)',
+          border: `1px solid ${msg.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`
+        }}>
+          {msg.text}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { Semester, CourseStats, AttendanceRecord, CourseWithSchedule } from '@shared/types'
 import { exportCSV, exportPDF } from '../../lib/exporter'
 
@@ -10,29 +10,58 @@ interface ExportModalProps {
   onClose: () => void
 }
 
+type StatusFilter = 'all' | AttendanceRecord['status']
+
 export function ExportModal({ semester, courseStats, courses, records, onClose }: ExportModalProps) {
   const [format, setFormat] = useState<'pdf' | 'csv'>('pdf')
   const [useCustomRange, setUseCustomRange] = useState(false)
   const [fromDate, setFromDate] = useState(semester.startDate)
   const [toDate, setToDate] = useState(semester.endDate)
+  const [filterCourse, setFilterCourse] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
   const [exporting, setExporting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const recordsInRange = records.filter(
-    r => r.date >= (useCustomRange ? fromDate : semester.startDate)
-      && r.date <= (useCustomRange ? toDate : semester.endDate)
-  )
+  const effectiveFrom = useCustomRange ? fromDate : semester.startDate
+  const effectiveTo   = useCustomRange ? toDate   : semester.endDate
+
+  // Apply filters to records
+  const filteredRecords = useMemo(() => {
+    return records.filter(r => {
+      if (r.date < effectiveFrom || r.date > effectiveTo) return false
+      if (filterCourse !== 'all' && r.courseId !== Number(filterCourse)) return false
+      if (filterStatus !== 'all' && r.status !== filterStatus) return false
+      return true
+    })
+  }, [records, effectiveFrom, effectiveTo, filterCourse, filterStatus])
+
+  // Filter courseStats to match course filter
+  const filteredStats = useMemo(() =>
+    filterCourse === 'all'
+      ? courseStats
+      : courseStats.filter(s => s.courseId === Number(filterCourse))
+  , [courseStats, filterCourse])
+
+  const filteredCourses = useMemo(() =>
+    filterCourse === 'all'
+      ? courses
+      : courses.filter(c => c.id === Number(filterCourse))
+  , [courses, filterCourse])
+
+  const atRiskCount = filteredStats.filter(
+    s => s.currentPct !== null && s.currentPct < s.threshold
+  ).length
 
   async function handleExport() {
     setExporting(true)
     try {
       const opts = {
         semester,
-        courseStats,
-        courses,
-        records,
-        fromDate: useCustomRange ? fromDate : undefined,
-        toDate:   useCustomRange ? toDate   : undefined
+        courseStats: filteredStats,
+        courses: filteredCourses,
+        records: filteredRecords,
+        fromDate: effectiveFrom,
+        toDate:   effectiveTo
       }
       if (format === 'pdf') exportPDF(opts)
       else exportCSV(opts)
@@ -69,6 +98,36 @@ export function ExportModal({ semester, courseStats, courses, records, onClose }
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Filters */}
+        <div className="export-section">
+          <div className="filter-bar" style={{ marginBottom: 0 }}>
+            <span className="filter-label">Filter:</span>
+
+            <select
+              className="select"
+              value={filterCourse}
+              onChange={e => setFilterCourse(e.target.value)}
+              style={{ minWidth: 140 }}
+            >
+              <option value="all">All courses</option>
+              {courses.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            <select
+              className="select"
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value as StatusFilter)}
+            >
+              <option value="all">All statuses</option>
+              <option value="attended">Attended only</option>
+              <option value="bunked">Bunked only</option>
+              <option value="cancelled">Cancelled only</option>
+            </select>
+          </div>
         </div>
 
         {/* Date range */}
@@ -112,16 +171,16 @@ export function ExportModal({ semester, courseStats, courses, records, onClose }
         {/* Preview stats */}
         <div className="export-preview">
           <div className="export-preview-stat">
-            <span className="ep-value">{courseStats.length}</span>
+            <span className="ep-value">{filteredCourses.length}</span>
             <span className="ep-label">courses</span>
           </div>
           <div className="export-preview-stat">
-            <span className="ep-value">{recordsInRange.length}</span>
+            <span className="ep-value">{filteredRecords.length}</span>
             <span className="ep-label">log entries</span>
           </div>
           <div className="export-preview-stat">
-            <span className={`ep-value ${courseStats.filter(s => s.currentPct !== null && s.currentPct < s.threshold).length > 0 ? 'danger' : 'safe'}`}>
-              {courseStats.filter(s => s.currentPct !== null && s.currentPct < s.threshold).length}
+            <span className={`ep-value ${atRiskCount > 0 ? 'danger' : 'safe'}`}>
+              {atRiskCount}
             </span>
             <span className="ep-label">at-risk courses</span>
           </div>

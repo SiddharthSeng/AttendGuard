@@ -35,6 +35,10 @@ const attendGuard: AttendGuardAPI = {
   setRemindersEnabled: (enabled)        => ipcRenderer.invoke('reminders:setEnabled', enabled),
   getRemindersEnabled: ()               => ipcRenderer.invoke('reminders:getEnabled'),
   rescheduleReminders: ()               => ipcRenderer.invoke('reminders:reschedule'),
+
+  // Backup & Restore
+  exportBackup: ()            => ipcRenderer.invoke('backup:export'),
+  importBackup: (base64)      => ipcRenderer.invoke('backup:import', base64),
 }
 
 if (process.contextIsolated) {

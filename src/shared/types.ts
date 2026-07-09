@@ -159,4 +159,8 @@ export interface AttendGuardAPI {
   setRemindersEnabled(enabled: boolean): Promise<{ ok: boolean }>
   getRemindersEnabled(): Promise<boolean>
   rescheduleReminders(): Promise<{ ok: boolean }>
+
+  // Backup & Restore
+  exportBackup(): Promise<string>  // returns base64-encoded SQLite bytes
+  importBackup(base64: string): Promise<{ ok: boolean }>
 }

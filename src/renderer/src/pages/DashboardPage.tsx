@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import type { PageProps } from './types'
 import AggregateSummary from '../components/Dashboard/AggregateSummary'
 import CourseCard from '../components/Dashboard/CourseCard'
 import TrendChart from '../components/Dashboard/TrendChart'
 import { useHolidayWarning } from '../hooks/useAppData'
+import { ExportModal } from '../components/common/ExportModal'
 
 interface DashboardPageProps extends PageProps {
   onGoHolidays: () => void
@@ -11,6 +13,7 @@ interface DashboardPageProps extends PageProps {
 export default function DashboardPage(props: DashboardPageProps) {
   const { semester, courses, holidays, courseStats, aggregateStats, records, autoCount, onGoHolidays } = props
   const warning = useHolidayWarning(semester)
+  const [showExport, setShowExport] = useState(false)
 
   if (!semester) return (
     <div className="empty-state">
@@ -27,10 +30,20 @@ export default function DashboardPage(props: DashboardPageProps) {
           <div className="page-title">{semester.name}</div>
           <div className="page-subtitle">{semester.startDate} → {semester.endDate}</div>
         </div>
-        {/* Persistent holiday shortcut — always visible */}
-        <button className="holiday-shortcut" onClick={onGoHolidays} title="Review and edit holidays">
-          📅 {autoCount} auto-holiday{autoCount !== 1 ? 's' : ''} — Edit
-        </button>
+        <div className="dashboard-actions">
+          {/* Persistent holiday shortcut — always visible */}
+          <button className="holiday-shortcut" onClick={onGoHolidays} title="Review and edit holidays">
+            📅 {autoCount} auto-holiday{autoCount !== 1 ? 's' : ''} — Edit
+          </button>
+          {/* Export report button */}
+          <button
+            className="export-btn"
+            onClick={() => setShowExport(true)}
+            title="Export attendance report as PDF or CSV"
+          >
+            ⬇ Export Report
+          </button>
+        </div>
       </div>
 
       {/* Out-of-range warning for variable holidays */}
@@ -69,6 +82,18 @@ export default function DashboardPage(props: DashboardPageProps) {
           <TrendChart semester={semester} courses={courses} records={records} holidays={holidays} courseStats={courseStats} />
         </div>
       )}
+
+      {/* Export modal */}
+      {showExport && semester && (
+        <ExportModal
+          semester={semester}
+          courseStats={courseStats}
+          courses={courses}
+          records={records}
+          onClose={() => setShowExport(false)}
+        />
+      )}
     </>
   )
 }
+

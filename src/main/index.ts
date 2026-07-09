@@ -7,6 +7,7 @@ import { registerSemesterHandlers } from './ipc/semesters'
 import { registerCourseHandlers } from './ipc/courses'
 import { registerAttendanceHandlers } from './ipc/attendance'
 import { registerHolidayHandlers } from './ipc/holidays'
+import { registerReminderHandlers, startMidnightReschedule } from './reminders'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -52,6 +53,10 @@ app.whenReady().then(() => {
   registerCourseHandlers()
   registerAttendanceHandlers()
   registerHolidayHandlers()
+  registerReminderHandlers()
+
+  // Schedule class reminders (fires today's; reschedules each midnight)
+  startMidnightReschedule()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

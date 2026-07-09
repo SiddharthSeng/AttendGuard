@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Semester } from '@shared/types'
 
 const STATES = [
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function SettingsPage({ semester, allSemesters, onSemesterChange, switchSemester }: Props) {
-  const [tab, setTab] = useState<'semester'|'semesters'>('semester')
+  const [tab, setTab] = useState<'semester'|'semesters'|'notifications'>('semester')
 
   return (
     <>
@@ -33,6 +33,7 @@ export default function SettingsPage({ semester, allSemesters, onSemesterChange,
       <div className="tabs">
         <button className={`tab${tab==='semester'?' active':''}`} onClick={() => setTab('semester')}>Current Semester</button>
         <button className={`tab${tab==='semesters'?' active':''}`} onClick={() => setTab('semesters')}>All Semesters</button>
+        <button className={`tab${tab==='notifications'?' active':''}`} onClick={() => setTab('notifications')}>Notifications</button>
       </div>
 
       {tab === 'semester' && semester && (
@@ -48,6 +49,10 @@ export default function SettingsPage({ semester, allSemesters, onSemesterChange,
 
       {tab === 'semesters' && (
         <AllSemestersTab allSemesters={allSemesters} onChanged={onSemesterChange} currentId={semester?.id} switchSemester={switchSemester} />
+      )}
+
+      {tab === 'notifications' && (
+        <NotificationsTab />
       )}
     </>
   )
@@ -177,6 +182,65 @@ function AllSemestersTab({ allSemesters, onChanged, currentId, switchSemester }:
           </button>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ─── Notifications Tab ────────────────────────────────────────────────────────
+
+function NotificationsTab() {
+  const [enabled, setEnabled] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    window.attendGuard.getRemindersEnabled().then(setEnabled)
+  }, [])
+
+  const toggle = async () => {
+    if (enabled === null) return
+    const next = !enabled
+    await window.attendGuard.setRemindersEnabled(next)
+    setEnabled(next)
+  }
+
+  return (
+    <div className="card" style={{display:'flex', flexDirection:'column', gap:24, maxWidth:560}}>
+      <div className="settings-section">
+        <div className="settings-section-title">Class Reminders</div>
+        <div style={{fontSize:13, color:'var(--text-secondary)', marginBottom:16}}>
+          Get a desktop notification 15 minutes before each scheduled class.
+          The reminder is skipped automatically if the class was already logged.
+        </div>
+
+        <div className="toggle-wrap">
+          <button
+            className={`toggle${enabled ? ' on' : ''}`}
+            onClick={toggle}
+            disabled={enabled === null}
+            aria-label="Toggle class reminders"
+          >
+            <div className="toggle-knob" />
+          </button>
+          <div>
+            <div style={{fontWeight:600, fontSize:14}}>
+              {enabled === null ? 'Loading…' : enabled ? 'Reminders enabled' : 'Reminders disabled'}
+            </div>
+            <div style={{fontSize:12, color:'var(--text-muted)'}}>
+              {enabled
+                ? 'You will receive notifications 15 min before each class while the app is open.'
+                : 'No reminders will be sent.'
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <div className="settings-section-title" style={{color:'var(--text-muted)', fontSize:12}}>Note</div>
+        <div style={{fontSize:12, color:'var(--text-muted)', lineHeight:1.6}}>
+          Notifications only fire while AttendGuard is running.
+          For reminders when the app is closed, keep it running in the background via the system tray (coming in a future update).
+        </div>
+      </div>
     </div>
   )
 }

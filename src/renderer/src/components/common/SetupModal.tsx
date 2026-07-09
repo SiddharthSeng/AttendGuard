@@ -1,15 +1,5 @@
 import { useState } from 'react'
-import type { Semester } from '@shared/types'
-
-const STATES = [
-  { code: 'TN', name: 'Tamil Nadu' }, { code: 'MH', name: 'Maharashtra' },
-  { code: 'KA', name: 'Karnataka' },  { code: 'KL', name: 'Kerala' },
-  { code: 'AP', name: 'Andhra Pradesh' }, { code: 'TS', name: 'Telangana' },
-  { code: 'WB', name: 'West Bengal' },{ code: 'DL', name: 'Delhi' },
-  { code: 'GJ', name: 'Gujarat' },    { code: 'RJ', name: 'Rajasthan' },
-  { code: 'UP', name: 'Uttar Pradesh' }, { code: 'MP', name: 'Madhya Pradesh' },
-  { code: 'GA', name: 'Goa' },        { code: 'OTHER', name: 'Other / National' },
-]
+import { INDIAN_STATES, type Semester } from '@shared/types'
 
 interface Props {
   onClose: () => void
@@ -70,7 +60,7 @@ export default function SetupModal({ onClose, onCreated }: Props) {
           <div className="form-group">
             <label className="form-label">State / Region (for auto-holidays)</label>
             <select className="select" value={stateCode} onChange={e => setStateCode(e.target.value)}>
-              {STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+              {INDIAN_STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
             </select>
           </div>
 

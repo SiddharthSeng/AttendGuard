@@ -36,7 +36,13 @@ const pendingTimers: ReturnType<typeof setTimeout>[] = []
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10)
+  // Use local date components — not toISOString() which returns UTC and can
+  // disagree with the renderer's date-fns format() around midnight.
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm   = (d.getMonth() + 1).toString().padStart(2, '0')
+  const dd   = d.getDate().toString().padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
 }
 
 function clearTimers(): void {

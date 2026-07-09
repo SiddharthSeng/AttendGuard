@@ -164,3 +164,16 @@ export interface AttendGuardAPI {
   exportBackup(): Promise<string>  // returns base64-encoded SQLite bytes
   importBackup(base64: string): Promise<{ ok: boolean }>
 }
+
+// Shared list of supported Indian states / regions (used by SetupModal and SettingsPage)
+export const INDIAN_STATES = [
+  { code: 'TN', name: 'Tamil Nadu' }, { code: 'MH', name: 'Maharashtra' },
+  { code: 'KA', name: 'Karnataka' },  { code: 'KL', name: 'Kerala' },
+  { code: 'AP', name: 'Andhra Pradesh' }, { code: 'TS', name: 'Telangana' },
+  { code: 'WB', name: 'West Bengal' },{ code: 'DL', name: 'Delhi' },
+  { code: 'GJ', name: 'Gujarat' },    { code: 'RJ', name: 'Rajasthan' },
+  { code: 'UP', name: 'Uttar Pradesh' }, { code: 'BR', name: 'Bihar' },
+  { code: 'MP', name: 'Madhya Pradesh' }, { code: 'OD', name: 'Odisha' },
+  { code: 'PB', name: 'Punjab' },     { code: 'HR', name: 'Haryana' },
+  { code: 'GA', name: 'Goa' },        { code: 'OTHER', name: 'Other / National' },
+] as const

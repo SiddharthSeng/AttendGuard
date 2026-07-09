@@ -130,14 +130,18 @@ export function countRemainingClasses(
   holidaySet: Set<string>
 ): number {
   if (!dayOfWeekSchedule.length) return 0
-  const cursor = new Date(today)
+  // Use 'T00:00:00' suffix to parse as local midnight (not UTC).
+  // Without it, new Date('2025-07-14') = midnight UTC, and getDay() returns
+  // the wrong day-of-week in negative UTC offsets.
+  const cursor = new Date(today + 'T00:00:00')
   cursor.setDate(cursor.getDate() + 1) // start from tomorrow
-  const end = new Date(semesterEnd)
+  const end = new Date(semesterEnd + 'T00:00:00')
   if (cursor > end) return 0
 
   let count = 0
+  const pad2 = (n: number): string => n.toString().padStart(2, '0')
   while (cursor <= end) {
-    const ds = cursor.toISOString().slice(0, 10)
+    const ds = `${cursor.getFullYear()}-${pad2(cursor.getMonth() + 1)}-${pad2(cursor.getDate())}`
     if (dayOfWeekSchedule.includes(cursor.getDay()) && !holidaySet.has(ds)) count++
     cursor.setDate(cursor.getDate() + 1)
   }

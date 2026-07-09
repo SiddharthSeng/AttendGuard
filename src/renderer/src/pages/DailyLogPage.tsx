@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { format, addDays, subDays, parseISO } from 'date-fns'
 import type { PageProps } from './types'
 import { useDailyClasses } from '../hooks/useAppData'
-import { bunkPreview } from '../lib/calculator'
 import type { AttendanceRecord } from '@shared/types'
 
 type StatusFilter = 'all' | AttendanceRecord['status']
@@ -153,7 +152,7 @@ export default function DailyLogPage(props: PageProps) {
         <div className="daily-class-list">
           {filteredClasses.map(dc => {
             const stats   = courseStats.find(s => s.courseId === dc.course.id)
-            const preview = stats ? bunkPreview(stats, 1) : null
+            const preview = dc.bunkPreviewPct
             const status  = dc.record?.status ?? null
             const cardClass = status ? `daily-class-card logged-${status}` : 'daily-class-card'
 

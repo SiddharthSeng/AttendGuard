@@ -1,17 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Semester } from '@shared/types'
-
-const STATES = [
-  { code: 'TN', name: 'Tamil Nadu' }, { code: 'MH', name: 'Maharashtra' },
-  { code: 'KA', name: 'Karnataka' },  { code: 'KL', name: 'Kerala' },
-  { code: 'AP', name: 'Andhra Pradesh' }, { code: 'TS', name: 'Telangana' },
-  { code: 'WB', name: 'West Bengal' },{ code: 'DL', name: 'Delhi' },
-  { code: 'GJ', name: 'Gujarat' },    { code: 'RJ', name: 'Rajasthan' },
-  { code: 'UP', name: 'Uttar Pradesh' }, { code: 'BR', name: 'Bihar' },
-  { code: 'MP', name: 'Madhya Pradesh' }, { code: 'OD', name: 'Odisha' },
-  { code: 'PB', name: 'Punjab' },     { code: 'HR', name: 'Haryana' },
-  { code: 'GA', name: 'Goa' },        { code: 'OTHER', name: 'Other' },
-]
+import { INDIAN_STATES, type Semester } from '@shared/types'
 
 interface Props {
   semester: Semester | null
@@ -107,7 +95,7 @@ function SemesterEditor({ semester, onSaved }: { semester: Semester; onSaved: ()
         <div className="form-group">
           <label className="form-label">State / Region (for holidays)</label>
           <select className="select" value={stateCode} onChange={e => setStateCode(e.target.value)}>
-            {STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+            {INDIAN_STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
           </select>
         </div>
       </div>

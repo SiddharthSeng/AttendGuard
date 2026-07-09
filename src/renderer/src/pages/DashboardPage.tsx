@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { format } from 'date-fns'
 import type { PageProps } from './types'
 import AggregateSummary from '../components/Dashboard/AggregateSummary'
 import CourseCard from '../components/Dashboard/CourseCard'
@@ -23,8 +24,30 @@ export default function DashboardPage(props: DashboardPageProps) {
     </div>
   )
 
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const semesterNotStarted = todayStr < semester.startDate
+  const semesterEnded = todayStr > semester.endDate
+
   return (
     <>
+      {semesterNotStarted && (
+        <div className="holiday-banner" style={{ borderColor: 'rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)' }}>
+          <span>📅</span>
+          <div>
+            <div style={{fontWeight:600}}>Semester hasn't started yet</div>
+            <div style={{fontSize:12, opacity:0.8}}>Begins {semester.startDate}. Showing projected data based on your schedule.</div>
+          </div>
+        </div>
+      )}
+      {semesterEnded && (
+        <div className="holiday-banner" style={{ borderColor: 'rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)' }}>
+          <span>🏁</span>
+          <div>
+            <div style={{fontWeight:600}}>Semester ended — Final Report</div>
+            <div style={{fontSize:12, opacity:0.8}}>Ended {semester.endDate}. These are your final attendance statistics.</div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <div className="page-title">{semester.name}</div>

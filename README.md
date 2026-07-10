@@ -1,6 +1,6 @@
 # AttendGuard 🛡️
 
-> Desktop attendance tracker that projects your end-of-semester percentage in real time — so you always know exactly how many classes you can safely skip.
+**Desktop attendance tracker that projects your end-of-semester percentage in real time — so you always know exactly how many classes you can safely skip.**
 
 ![Build](https://github.com/SiddharthSeng/AttendGuard/actions/workflows/build-release.yml/badge.svg)
 ![License](https://img.shields.io/github/license/SiddharthSeng/AttendGuard)
@@ -40,11 +40,11 @@
 
 > Installers are published automatically on tagged releases via GitHub Actions.
 
-| Platform | Format |
-|----------|--------|
-| Windows  | [`.exe` installer](https://github.com/SiddharthSeng/AttendGuard/releases/latest) |
-| macOS    | [`.dmg`](https://github.com/SiddharthSeng/AttendGuard/releases/latest) |
-| Linux    | [`.AppImage` / `.deb`](https://github.com/SiddharthSeng/AttendGuard/releases/latest) |
+| Platform | One-click download |
+|----------|--------------------|
+| 🪟 Windows | [**AttendGuard-Setup.exe**](https://github.com/SiddharthSeng/AttendGuard/releases/latest/download/AttendGuard-Setup.exe) |
+| 🍎 macOS   | [**AttendGuard.dmg**](https://github.com/SiddharthSeng/AttendGuard/releases/latest/download/AttendGuard.dmg) |
+| 🐧 Linux   | [**AttendGuard.AppImage**](https://github.com/SiddharthSeng/AttendGuard/releases/latest/download/AttendGuard.AppImage) · [AttendGuard.deb](https://github.com/SiddharthSeng/AttendGuard/releases/latest/download/AttendGuard.deb) |
 
 ---
 

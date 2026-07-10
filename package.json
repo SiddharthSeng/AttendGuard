@@ -1,6 +1,6 @@
 {
   "name": "attendguard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop attendance tracker that projects end-of-semester % and tells you how many classes you can safely skip — Electron + React + TypeScript + SQLite",
   "main": "./out/main/index.js",
   "author": {
@@ -40,6 +40,7 @@
     ],
     "extraResources": [],
     "win": {
+      "executableName": "AttendGuard",
       "target": [
         {
           "target": "nsis",
@@ -82,10 +83,20 @@
       "category": "Education"
     },
     "nsis": {
+      "artifactName": "AttendGuard-Setup.exe",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "resources/icon.ico",
       "uninstallerIcon": "resources/icon.ico"
+    },
+    "dmg": {
+      "artifactName": "AttendGuard.dmg"
+    },
+    "appImage": {
+      "artifactName": "AttendGuard.AppImage"
+    },
+    "deb": {
+      "artifactName": "AttendGuard.deb"
     },
     "publish": {
       "provider": "github",

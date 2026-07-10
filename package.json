@@ -1,10 +1,11 @@
 {
   "name": "attendguard",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Desktop attendance tracker that projects end-of-semester % and tells you how many classes you can safely skip — Electron + React + TypeScript + SQLite",
   "main": "./out/main/index.js",
   "author": {
     "name": "SiddharthSeng",
+    "email": "siddharth@attendguard.dev",
     "url": "https://github.com/SiddharthSeng"
   },
   "homepage": "https://github.com/SiddharthSeng/AttendGuard",

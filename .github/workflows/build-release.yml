@@ -70,9 +70,14 @@ jobs:
       - name: Build Electron app
         run: npm run build
 
+      - name: Install Linux packaging dependencies
+        if: matrix.platform == 'linux'
+        run: sudo apt-get update -y && sudo apt-get install -y fakeroot rpm dpkg
+
       - name: Package installer (${{ matrix.platform }})
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
         run: npx electron-builder --${{ matrix.platform }} --publish never
 
       - name: Upload artifacts
@@ -91,7 +96,9 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Run as long as the build matrix wasn't fully cancelled — publish
+    # whichever platform artifacts were successfully built.
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.build.result != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       contents: write

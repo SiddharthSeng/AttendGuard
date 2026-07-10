@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: attendguard-win-${{ github.ref_name }}
-          path: release/**/*.exe
+          path: release/**/*Setup*.exe
           retention-days: 30
 
   # ── macOS build ───────────────────────────────────────────────────────────
@@ -106,20 +106,30 @@ jobs:
           path: release/**/*.dmg
           retention-days: 30
 
-  # ── Linux build (Docker) ──────────────────────────────────────────────────
+  # ── Linux build ───────────────────────────────────────────────────────────
   build-linux:
     name: Build (ubuntu-latest)
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    container:
-      image: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Linux packaging system dependencies
+        # fakeroot + dpkg-dev: needed for .deb builds
+        # rpm: electron-builder uses it internally even for non-RPM targets
+        # libarchive-tools: needed by AppImage tooling
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y fakeroot dpkg-dev rpm libarchive-tools
+
       - name: Install dependencies
-        # The builder image ships Node 20; skip postinstall native rebuild —
-        # the image already has all native build tools available.
         run: npm ci --ignore-scripts
 
       - name: Rebuild native modules for Electron

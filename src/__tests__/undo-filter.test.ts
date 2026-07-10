@@ -4,7 +4,7 @@
  * DailyLogPage.tsx implement — no React renderer needed.
  */
 import { describe, it, expect, vi } from 'vitest'
-import type { AttendanceRecord, CourseWithSchedule } from '@shared/types'
+import type { AttendanceRecord } from '@shared/types'
 
 // ─── Undo helpers ──────────────────────────────────────────────────────────────
 

@@ -22,66 +22,91 @@ export function registerBackupHandlers(): void {
 
   // ── Export: write a WAL checkpoint then stream bytes as base64 ────────────
   ipcMain.handle('backup:export', async () => {
-    const db = getDb()
+    try {
+      const db = getDb()
 
-    // Force a WAL checkpoint so the file is fully consistent
-    db.pragma('wal_checkpoint(FULL)')
+      // Force a WAL checkpoint so the file is fully consistent
+      db.pragma('wal_checkpoint(FULL)')
 
-    const dbPath = path.join(app.getPath('userData'), 'attendguard.db')
-    const bytes  = fs.readFileSync(dbPath)
-    return Buffer.from(bytes).toString('base64')
+      const dbPath = path.join(app.getPath('userData'), 'attendguard.db')
+      const bytes  = fs.readFileSync(dbPath)
+      return Buffer.from(bytes).toString('base64')
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err))
+    }
   })
 
   // ── Import: validate, atomically swap, reload ─────────────────────────────
   ipcMain.handle('backup:import', async (_e, base64: string) => {
-    // 1. Decode
-    let bytes: Buffer
     try {
-      bytes = Buffer.from(base64, 'base64')
-    } catch {
-      throw new Error('Invalid backup data — could not decode.')
-    }
-
-    // 2. Validate SQLite magic header
-    const magic = bytes.slice(0, 16).toString('binary')
-    if (magic !== DB_HEADER) {
-      throw new Error('File does not appear to be a valid SQLite database.')
-    }
-
-    // 3. Write to a temporary path first, then atomically rename
-    const dbPath  = path.join(app.getPath('userData'), 'attendguard.db')
-    const tmpPath = dbPath + '.import.tmp'
-
-    try {
-      fs.writeFileSync(tmpPath, bytes)
-
-      // 4. Close the current DB connection (close releases the WAL lock)
-      const db = getDb()
-      db.close()
-
-      // 5. Atomically replace
-      fs.renameSync(tmpPath, dbPath)
-    } catch (err) {
-      // Clean up temp file on failure
-      try { fs.unlinkSync(tmpPath) } catch { /* ignore */ }
-      throw err
-    }
-
-    // 6. Prompt a full app restart — simplest way to re-init the DB cleanly
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) {
-      const choice = await dialog.showMessageBox(win, {
-        type: 'info',
-        title: 'Backup restored',
-        message: 'Backup was restored successfully. The app needs to restart to load the new data.',
-        buttons: ['Restart now', 'Later']
-      })
-      if (choice.response === 0) {
-        app.relaunch()
-        app.exit(0)
+      // 1. Decode
+      let bytes: Buffer
+      try {
+        bytes = Buffer.from(base64, 'base64')
+      } catch {
+        throw new Error('Invalid backup data — could not decode.')
       }
-    }
 
-    return { ok: true }
+      // 2. Validate SQLite magic header
+      const magic = bytes.slice(0, 16).toString('binary')
+      if (magic !== DB_HEADER) {
+        throw new Error('File does not appear to be a valid SQLite database.')
+      }
+
+      // 3. Write to a temporary path first, then atomically rename
+      const dbPath  = path.join(app.getPath('userData'), 'attendguard.db')
+      const tmpPath = dbPath + '.import.tmp'
+      const bakPath = dbPath + '.bak'
+
+      try {
+        fs.writeFileSync(tmpPath, bytes)
+
+        // 4. Create a safety backup of the current DB before closing
+        fs.copyFileSync(dbPath, bakPath)
+
+        // 5. Close the current DB connection (close releases the WAL lock)
+        const db = getDb()
+        db.close()
+
+        // 6. Atomically replace
+        try {
+          fs.renameSync(tmpPath, dbPath)
+        } catch (renameErr) {
+          // Rename failed — restore from safety backup
+          fs.copyFileSync(bakPath, dbPath)
+          throw renameErr
+        }
+
+        // 7. Clean up safety backup on success
+        try { fs.unlinkSync(bakPath) } catch { /* ignore */ }
+
+        // 8. Clean up stale WAL/SHM files
+        try { fs.unlinkSync(dbPath + '-wal') } catch { /* ignore */ }
+        try { fs.unlinkSync(dbPath + '-shm') } catch { /* ignore */ }
+      } catch (err) {
+        // Clean up temp file on failure
+        try { fs.unlinkSync(tmpPath) } catch { /* ignore */ }
+        throw err
+      }
+
+      // 9. Prompt a full app restart — simplest way to re-init the DB cleanly
+      const win = BrowserWindow.getFocusedWindow()
+      if (win) {
+        const choice = await dialog.showMessageBox(win, {
+          type: 'info',
+          title: 'Backup restored',
+          message: 'Backup was restored successfully. The app needs to restart to load the new data.',
+          buttons: ['Restart now', 'Later']
+        })
+        if (choice.response === 0) {
+          app.relaunch()
+          app.exit(0)
+        }
+      }
+
+      return { ok: true }
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err))
+    }
   })
 }
